@@ -48,7 +48,7 @@ def run_pipeline(
     detection: str = "algorithm",
     reference_dir: str | Path = DEFAULT_REFERENCE_DIR,
     yolo_model: str | Path | None = None,
-    yolo_confidence: float = 0.25,
+    yolo_confidence: float = 0.40,
     algorithm_min_area: float = 20.0,
     algorithm_max_area: float = 5000.0,
     algorithm_min_circularity: float = 0.25,
@@ -130,7 +130,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--reference-dir", type=Path, default=DEFAULT_REFERENCE_DIR, help="Top-view reference directory.")
     parser.add_argument("--draw", type=parse_bool, default=True, help="Draw detections on the saved image.")
     parser.add_argument("--yolo-model", type=Path, default=None, help="YOLO weight path for --detection yolo.")
-    parser.add_argument("--yolo-confidence", type=float, default=0.25, help="YOLO confidence threshold.")
+    parser.add_argument("--yolo-confidence", type=float, default=0.40, help="YOLO confidence threshold (val-tuned optimum).")
     parser.add_argument("--algorithm-min-area", type=float, default=20.0, help="Minimum contour area for algorithm detection.")
     parser.add_argument("--algorithm-max-area", type=float, default=5000.0, help="Maximum contour area for algorithm detection.")
     parser.add_argument("--algorithm-min-circularity", type=float, default=0.25, help="Minimum contour circularity for algorithm detection.")
