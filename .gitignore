@@ -1,0 +1,21 @@
+# weights / training artifacts (커밋 금지)
+*.pt
+*.onnx
+*.engine
+runs/
+bullet_runs/
+weights/
+
+# datasets
+datasets/
+*.cache
+
+# python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# local test I/O
+python_poc/_local_test/
