@@ -19,3 +19,10 @@ venv/
 
 # local test I/O
 python_poc/_local_test/
+
+# detector debug / result outputs (생성물, 커밋 금지)
+**/_warp_check/
+**/_detect_check/
+
+# macOS
+.DS_Store
