@@ -1,0 +1,7 @@
+# front_poc (Streamlit 탄착군 분석 데모)
+streamlit>=1.30
+opencv-python-headless>=4.8
+numpy>=1.24
+
+# YOLO detection 모드를 쓸 때만 필요 (가중치 *.pt 는 별도 경로로 지정)
+ultralytics>=8.0
