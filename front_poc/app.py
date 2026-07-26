@@ -295,7 +295,11 @@ if det_error:
 height, width = work_image.shape[:2]
 result = analyze_grouping(
     detections, (width, height),
-    threshold_frac=threshold_frac, threshold_px=threshold_px, min_shots=min_shots,
+    threshold_frac=threshold_frac,
+    threshold_px=threshold_px,
+    min_shots=min_shots,
+    cluster_eps_frac=0.08,
+    cluster_min_samples=2,
 )
 annotated = draw_grouping(work_image, result, detections, draw_boxes=True)
 
