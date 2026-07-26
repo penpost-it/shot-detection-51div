@@ -32,27 +32,30 @@ from grouping import analyze_grouping, draw_grouping
 result = analyze_grouping(
     detections,            # x1,y1,x2,y2 가진 dict 또는 객체들 (YOLO Detection 호환)
     canvas_size=(w, h),    # 워핑된 이미지 크기
-    threshold_frac=0.12,   # 탄착군 지름 한계 = 캔버스 대각선의 %
-    threshold_px=None,     # 주면 px 절대값으로 오버라이드
-    min_shots=2,           # 판정에 필요한 최소 탄착 수
+    threshold_frac=0.12,   # 판정 원 지름 = 캔버스 대각선의 %
+    threshold_px=None,     # 주면 판정 원 지름을 px 절대값으로 지정
+    min_shots=2,           # 합격에 필요한 원 내부 탄착 수
 )
-annotated = draw_grouping(image_bgr, result, detections)  # 외접원+중심+판정 오버레이
+annotated = draw_grouping(image_bgr, result, detections)  # 고정 원+중심+판정 오버레이
 ```
 
-**판정식**: 탄착 bbox 중심점들의 **최소 외접원 지름 ≤ 임계값** → `formed=True`(합격).
-- 외접원: `min_enclosing_circle()` — 쌍(지름)·삼중(외접원) 후보 brute force, 정확/결정론적
-  (탄착 수가 수십 개 수준이라 O(n³)로 충분).
+**판정식**: 임계값을 **고정 원 지름**으로 보고, 그 원을 움직였을 때 들어가는 최대 탄착 수가
+`min_shots` 이상이면 `formed=True`(합격).
+- 고정 원 탐색: `find_best_fixed_circle()` — 모든 탄착점 쌍에서 가능한 반지름 `threshold / 2`
+  원 중심 후보를 만들고, 후보마다 포함 탄착 수를 센다.
+- 먼 탄착은 원을 키우지 않고 자동으로 제외된다.
 - 임계값을 **대각선 %로 정규화**한 이유: reference 캔버스 크기가 서로 달라도 비교가 일관됨.
 
 **`GroupingResult`**: `status`(`formed`/`not_formed`/`insufficient_shots`/`no_shots`),
-`formed`(bool|None), `n_shots`, `diameter_px`, `diameter_frac`, `circle_center/radius`,
+`formed`(bool|None), `total_detection_count`, `included_shot_count`, `included_indices`,
+`n_shots`(원 내부 탄착 수), `diameter_px`, `diameter_frac`, `circle_center/radius`,
 `centroid`, `threshold_px`, `canvas_diagonal_px`.
 
 **엣지케이스**: 0발→`no_shots`, `min_shots` 미만→`insufficient_shots` (둘 다 `formed=None`=판정불가).
 
 **테스트** (설치 0개, 표준 라이브러리만):
 ```bash
-cd python_poc && python3 -m unittest grouping.test_grouping -v   # 15 tests
+cd python_poc && python3 -m unittest grouping.test_grouping -v   # 18 tests
 ```
 
 ## 담당 파트 ②: 프론트 — `front_poc/app.py`
@@ -66,7 +69,8 @@ cd python_poc && python3 -m unittest grouping.test_grouping -v   # 15 tests
   **OpenCV 알고리즘**으로 자동 전환. 가중치 경로를 사용자가 입력할 필요 없음.
 - **고급(개발용) expander**: detection 방식 수동 선택 · YOLO 가중치 경로 override · confidence ·
   manual 좌표 · 탄착군 임계값(% 또는 px) · 최소 탄착 수. 평소엔 접혀 있다.
-- **메인**: 합/불 배지(한글, HTML) · 활성 검출기/워핑 상태 캡션 · 지표(탄착 수·지름 px·지름 %·임계값) ·
+- **메인**: 합/불 배지(한글, HTML) · 활성 검출기/워핑 상태 캡션 ·
+  지표(검출된 전체 탄착·판정 원 내부 탄착·판정 원 밖 탄착·판정 원 지름·합격 필요 탄착) ·
   원본/결과 2단 이미지 · 상세+다운로드(PNG/JSON).
 - **이미지 위 판정 라벨은 영어**(`PASS`/`FAIL` 등): `cv2.putText` 가 한글 글리프를 못 그려 `????` 가
   되므로, 임의 PC 시연에서 폰트 의존성 없이 동작하도록 영어로 표기. 화면 배지는 HTML 이라 한글 정상.
@@ -89,6 +93,6 @@ cd python_poc && python3 -m unittest grouping.test_grouping -v   # 15 tests
 
 ## 향후 확장 (현재 범위 밖)
 
-- flyer(이상치) 1~2발 제외 옵션, 다발 군집(DBSCAN) 분리
+- flyer(이상치) 1~2발 제외 옵션, 다발 그룹 별도 판정
 - 정확도/점수: 점수링 중심 대비 군 중심 거리 → 점수 환산
 - reference 캐싱(`st.cache_resource`)으로 워핑 반복 호출 가속
